@@ -1,30 +1,28 @@
 import json
 import os
 
-DEFAULT_CONFIG = {
-    'host': 'localhost',
-    'port': 8080,
-    'debug': False,
-    'log_level': 'WARNING'
-}
+def load_config(file_path='config.json'):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Config file not found: {file_path}")
+    with open(file_path, 'r') as file:
+        return json.load(file)
 
-class ConfigLoader:
-    def __init__(self, config_file='config.json'):
-        self.config_file = config_file
-        self.config = self.load_config()
 
-    def load_config(self):
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as f:
-                config_data = json.load(f)
-            return {**DEFAULT_CONFIG, **config_data}
-        return DEFAULT_CONFIG
+def save_config(data, file_path='config.json'):
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=4)
 
-    def get(self, key, default=None):
-        return self.config.get(key, default)
 
-    def __getitem__(self, key):
-        return self.config[key]
+def get_default_config():
+    return {
+        'setting1': 'value1',
+        'setting2': 'value2',
+        'setting3': 'value3'
+    }
 
-    def __repr__(self):
-        return f'<ConfigLoader {self.config}>'
+
+def validate_config(data):
+    required_keys = ['setting1', 'setting2', 'setting3']
+    for key in required_keys:
+        if key not in data:
+            raise ValueError(f'Missing required config key: {key}')
