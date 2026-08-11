@@ -2,30 +2,30 @@ import json
 import os
 
 class ConfigLoader:
-    def __init__(self, default_config_path='default_config.json'):
-        self.default_config_path = default_config_path
-        self.config = self.load_config()
+    def __init__(self, defaults=None):
+        self.config = defaults or {}
 
-    def load_config(self):
-        config = self.load_default_config()
-        env_config = self.load_env_config()
-        config.update(env_config)
-        return config
+    def load(self, filepath):
+        if os.path.exists(filepath):
+            with open(filepath, 'r') as file:
+                user_config = json.load(file)
+                self.config.update(user_config)
+        else:
+            print(f'Configuration file {filepath} not found. Using defaults.\n')
 
-    def load_default_config(self):
-        if os.path.exists(self.default_config_path):
-            with open(self.default_config_path, 'r') as f:
-                return json.load(f)
-        return {}
+    def get(self, key, default=None):
+        return self.config.get(key, default)
 
-    def load_env_config(self):
-        env_config = {}
-        for key, value in os.environ.items():
-            if key.startswith('APP_'):
-                env_config[key[4:].lower()] = value  # Remove APP_ prefix
-        return env_config
+    def __str__(self):
+        return json.dumps(self.config, indent=2)
 
-# Example usage:
+# Example Usage
 if __name__ == '__main__':
-    config_loader = ConfigLoader()
-    print(config_loader.config)
+    default_config = {
+        'host': 'localhost',
+        'port': 8080,
+        'debug': False
+    }
+    config_loader = ConfigLoader(defaults=default_config)
+    config_loader.load('config.json')
+    print(config_loader)
