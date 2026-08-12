@@ -1,25 +1,32 @@
-import json
-import os
+import time
+from threading import Thread, Event
 
-class DataProcessor:
-    def __init__(self, data_file):
-        self.data_file = data_file
-        self.data = self.load_data()
+class AutoClicker:
+    def __init__(self, interval=0.1):
+        self.interval = interval
+        self._stop_event = Event()
 
-    def load_data(self):
-        if not os.path.exists(self.data_file):
-            raise FileNotFoundError(f"{self.data_file} does not exist")
-        with open(self.data_file, 'r') as file:
-            return json.load(file)
+    def click(self):
+        # Simulate a mouse click
+        print('Click!')
 
-    def process_data(self):
-        # Example transformation: convert values to uppercase
-        return {key: value.upper() for key, value in self.data.items()}
+    def run(self):
+        while not self._stop_event.is_set():
+            self.click()
+            time.sleep(self.interval)
 
-    def save_data(self, output_file):
-        with open(output_file, 'w') as file:
-            json.dump(self.process_data(), file, indent=2)
+    def start(self):
+        self._thread = Thread(target=self.run)
+        self._thread.start()
+
+    def stop(self):
+        self._stop_event.set()
+        self._thread.join()
 
 if __name__ == '__main__':
-    processor = DataProcessor('input.json')
-    processor.save_data('output.json')
+    autoclicker = AutoClicker(interval=0.05)
+    try:
+        autoclicker.start()
+        time.sleep(5)
+    finally:
+        autoclicker.stop()
