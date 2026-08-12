@@ -1,31 +1,38 @@
 import json
 import os
 
-class ConfigLoader:
-    def __init__(self, defaults=None):
-        self.config = defaults or {}
+class Config:
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.settings = self.load_config()
 
-    def load(self, filepath):
-        if os.path.exists(filepath):
-            with open(filepath, 'r') as file:
-                user_config = json.load(file)
-                self.config.update(user_config)
-        else:
-            print(f'Configuration file {filepath} not found. Using defaults.\n')
+    def load_config(self):
+        if not os.path.exists(self.filepath):
+            raise FileNotFoundError(f"Configuration file not found: {self.filepath}")
+        try:
+            with open(self.filepath, 'r') as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            raise ValueError(f"Error decoding JSON from the configuration file: {self.filepath}")
+        except Exception as e:
+            raise RuntimeError(f"Unexpected error occurred while loading config: {e}")
 
     def get(self, key, default=None):
-        return self.config.get(key, default)
+        if key not in self.settings:
+            if default is None:
+                raise KeyError(f"Key not found in config: {key}")
+            return default
+        return self.settings[key]
 
-    def __str__(self):
-        return json.dumps(self.config, indent=2)
+    def set(self, key, value):
+        self.settings[key] = value
+        self.save_config()
 
-# Example Usage
-if __name__ == '__main__':
-    default_config = {
-        'host': 'localhost',
-        'port': 8080,
-        'debug': False
-    }
-    config_loader = ConfigLoader(defaults=default_config)
-    config_loader.load('config.json')
-    print(config_loader)
+    def save_config(self):
+        try:
+            with open(self.filepath, 'w') as file:
+                json.dump(self.settings, file, indent=4)
+        except Exception as e:
+            raise RuntimeError(f"Error saving config: {e}")
+
+config = Config('config.json')
