@@ -1,38 +1,37 @@
 import json
 import os
 
+class ConfigError(Exception):
+    pass
+
 class Config:
-    def __init__(self, filepath):
-        self.filepath = filepath
+    def __init__(self, config_file):
+        self.config_file = config_file
         self.settings = self.load_config()
 
     def load_config(self):
-        if not os.path.exists(self.filepath):
-            raise FileNotFoundError(f"Configuration file not found: {self.filepath}")
+        if not os.path.exists(self.config_file):
+            raise ConfigError(f'Configuration file {self.config_file} does not exist.')
         try:
-            with open(self.filepath, 'r') as file:
-                return json.load(file)
+            with open(self.config_file, 'r') as file:
+                settings = json.load(file)
         except json.JSONDecodeError:
-            raise ValueError(f"Error decoding JSON from the configuration file: {self.filepath}")
-        except Exception as e:
-            raise RuntimeError(f"Unexpected error occurred while loading config: {e}")
+            raise ConfigError(f'Error parsing JSON from {self.config_file}.')
+        if not isinstance(settings, dict):
+            raise ConfigError(f'Configuration file {self.config_file} must contain a JSON object.')
+        return settings
 
-    def get(self, key, default=None):
+    def get_setting(self, key, default=None):
         if key not in self.settings:
-            if default is None:
-                raise KeyError(f"Key not found in config: {key}")
-            return default
+            if default is not None:
+                return default
+            raise ConfigError(f'Setting {key} not found in the configuration.')
         return self.settings[key]
 
-    def set(self, key, value):
-        self.settings[key] = value
-        self.save_config()
-
-    def save_config(self):
-        try:
-            with open(self.filepath, 'w') as file:
-                json.dump(self.settings, file, indent=4)
-        except Exception as e:
-            raise RuntimeError(f"Error saving config: {e}")
-
-config = Config('config.json')
+# Example of using the Config class
+if __name__ == '__main__':
+    try:
+        config = Config('config.json')
+        print(config.get_setting('click_interval', 0.1))
+    except ConfigError as e:
+        print(f'Configuration Error: {e}')
