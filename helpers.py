@@ -1,22 +1,21 @@
-import json
-from typing import Any, Dict, List
+import time
+import random
+import requests
 
-class ClickEvent:
-    def __init__(self, x: int, y: int, delay: float):
-        self.x = x
-        self.y = y
-        self.delay = delay
+class NetworkError(Exception):
+    pass
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {'x': self.x, 'y': self.y, 'delay': self.delay}
-
-def serialize_click_events(events: List[ClickEvent]) -> str:
-    events_dict = [event.to_dict() for event in events]
-    return json.dumps(events_dict, indent=4)
-
-def deserialize_click_events(data: str) -> List[ClickEvent]:
-    try:
-        events_dict = json.loads(data)
-        return [ClickEvent(**event) for event in events_dict]
-    except (json.JSONDecodeError, TypeError) as e:
-        raise ValueError(f"Invalid data: {e}") from e
+def retry_request(url, max_retries=5, backoff_factor=1.0):
+    retries = 0
+    while retries < max_retries:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            retries += 1
+            if retries == max_retries:
+                raise NetworkError(f'Failed after {max_retries} retries')
+            wait_time = backoff_factor * (2 ** (retries - 1)) + random.uniform(0, 1)
+            time.sleep(wait_time)
+            print(f'Retrying... {retries}/{max_retries}')
