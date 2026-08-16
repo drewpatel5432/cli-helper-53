@@ -1,21 +1,21 @@
 import logging
-from logging.handlers import RotatingFileHandler
+import sys
 
-def setup_logger(log_file='app.log', max_bytes=5*1024*1024, backup_count=3):
-    logger = logging.getLogger('cli-helper-53')
+def setup_logger(name):
+    logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
-
-    handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
-
     logger.addHandler(handler)
     return logger
 
+def log_event(logger, event):
+    logger.info(f'Event occurred: {event}')
+
 if __name__ == '__main__':
-    log = setup_logger()
-    log.debug('Logger is set up and ready.')
-    log.info('This is an info message.')
-    log.warning('This is a warning message.')
-    log.error('This is an error message.')
-    log.critical('This is a critical message.')
+    custom_logger = setup_logger('AutoClicker')
+    log_event(custom_logger, 'Started clicker process')
+    log_event(custom_logger, 'Performing click action')
+    log_event(custom_logger, 'Stopped clicker process')
