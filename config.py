@@ -1,37 +1,37 @@
 import json
-import os
 
-class ConfigError(Exception):
-    pass
-
-class Config:
+class AutoClickerConfig:
     def __init__(self, config_file):
         self.config_file = config_file
         self.settings = self.load_config()
 
     def load_config(self):
-        if not os.path.exists(self.config_file):
-            raise ConfigError(f'Configuration file {self.config_file} does not exist.')
         try:
             with open(self.config_file, 'r') as file:
-                settings = json.load(file)
+                return json.load(file)
+        except FileNotFoundError:
+            return self.default_config()
         except json.JSONDecodeError:
-            raise ConfigError(f'Error parsing JSON from {self.config_file}.')
-        if not isinstance(settings, dict):
-            raise ConfigError(f'Configuration file {self.config_file} must contain a JSON object.')
-        return settings
+            raise ValueError('Invalid JSON format in configuration file.')
 
-    def get_setting(self, key, default=None):
-        if key not in self.settings:
-            if default is not None:
-                return default
-            raise ConfigError(f'Setting {key} not found in the configuration.')
-        return self.settings[key]
+    def default_config(self):
+        return {
+            'click_interval': 0.1,
+            'clicks_per_second': 10,
+            'active': True
+        }
 
-# Example of using the Config class
-if __name__ == '__main__':
-    try:
-        config = Config('config.json')
-        print(config.get_setting('click_interval', 0.1))
-    except ConfigError as e:
-        print(f'Configuration Error: {e}')
+    def save_config(self):
+        with open(self.config_file, 'w') as file:
+            json.dump(self.settings, file, indent=4)
+
+    def update_setting(self, key, value):
+        if key in self.settings:
+            self.settings[key] = value
+            self.save_config()
+        else:
+            raise KeyError(f"'{key}' not found in settings.")
+
+# Usage Example
+# config = AutoClickerConfig('config.json')
+# config.update_setting('click_interval', 0.05)
