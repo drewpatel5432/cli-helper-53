@@ -1,21 +1,17 @@
 import logging
-import sys
+from logging.handlers import RotatingFileHandler
 
-def setup_logger(name):
-    logger = logging.getLogger(name)
+def setup_logger(log_file='app.log', max_bytes=5 * 1024 * 1024, backup_count=3):
+    logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
+    handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
 
-def log_event(logger, event):
-    logger.info(f'Event occurred: {event}')
-
 if __name__ == '__main__':
-    custom_logger = setup_logger('AutoClicker')
-    log_event(custom_logger, 'Started clicker process')
-    log_event(custom_logger, 'Performing click action')
-    log_event(custom_logger, 'Stopped clicker process')
+    logger = setup_logger()
+    logger.info('Logger setup complete')
+    logger.debug('This is a debug message')
+    logger.error('This is an error message')
