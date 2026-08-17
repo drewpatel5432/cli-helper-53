@@ -1,21 +1,23 @@
 import time
-import random
 import requests
 
 class NetworkError(Exception):
     pass
 
-def retry_request(url, max_retries=5, backoff_factor=1.0):
-    retries = 0
-    while retries < max_retries:
+def retry_request(url, retries=5, backoff=2):
+    for attempt in range(retries):
         try:
             response = requests.get(url)
-            response.raise_for_status()
+            response.raise_for_status()  # Raise an error for bad responses
             return response.json()
-        except requests.RequestException as e:
-            retries += 1
-            if retries == max_retries:
-                raise NetworkError(f'Failed after {max_retries} retries')
-            wait_time = backoff_factor * (2 ** (retries - 1)) + random.uniform(0, 1)
-            time.sleep(wait_time)
-            print(f'Retrying... {retries}/{max_retries}')
+        except requests.exceptions.RequestException as e:
+            if attempt == retries - 1:
+                raise NetworkError(f'Failed to retrieve {url} after {retries} attempts') from e
+            time.sleep(backoff ** attempt)  # Exponential backoff
+
+if __name__ == '__main__':
+    try:
+        data = retry_request('https://api.example.com/data')
+        print(data)
+    except NetworkError as ne:
+        print(ne)
