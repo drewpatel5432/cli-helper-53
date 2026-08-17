@@ -1,32 +1,30 @@
 import time
-from threading import Thread, Event
+import threading
 
 class AutoClicker:
     def __init__(self, interval=0.1):
         self.interval = interval
-        self._stop_event = Event()
+        self.running = False
+        self.click_thread = None
 
-    def click(self):
-        # Simulate a mouse click
-        print('Click!')
-
-    def run(self):
-        while not self._stop_event.is_set():
-            self.click()
+    def _click(self):
+        while self.running:
+            print("Click!")  # Simulated click action
             time.sleep(self.interval)
 
     def start(self):
-        self._thread = Thread(target=self.run)
-        self._thread.start()
+        if not self.running:
+            self.running = True
+            self.click_thread = threading.Thread(target=self._click)
+            self.click_thread.start()
 
     def stop(self):
-        self._stop_event.set()
-        self._thread.join()
+        if self.running:
+            self.running = False
+            self.click_thread.join()
 
 if __name__ == '__main__':
     autoclicker = AutoClicker(interval=0.05)
-    try:
-        autoclicker.start()
-        time.sleep(5)
-    finally:
-        autoclicker.stop()
+    autoclicker.start()
+    time.sleep(1)
+    autoclicker.stop()
