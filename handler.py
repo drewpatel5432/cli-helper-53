@@ -1,33 +1,34 @@
 import time
-import requests
+import sys
 
-class NetworkError(Exception):
-    pass
+class AutoClicker:
+    def __init__(self, delay):
+        self.delay = delay
 
-class NetworkHandler:
-    def __init__(self, max_retries=3, backoff_factor=2):
-        self.max_retries = max_retries
-        self.backoff_factor = backoff_factor
+    def start_clicking(self):
+        print("AutoClicker started. Press Ctrl+C to stop.")
+        try:
+            while True:
+                self.perform_click()
+                time.sleep(self.delay)
+        except KeyboardInterrupt:
+            print("AutoClicker stopped.")
 
-    def fetch_data(self, url):
-        retries = 0
-        while retries < self.max_retries:
-            try:
-                response = requests.get(url)
-                response.raise_for_status()
-                return response.json()
-            except requests.RequestException:
-                retries += 1
-                wait_time = self.backoff_factor ** retries
-                print(f'Retry {retries}/{self.max_retries} in {wait_time} seconds...')
-                time.sleep(wait_time)
-        raise NetworkError('Max retries exceeded')
+    def perform_click(self):
+        print("Click!")
+
+def validate_input(user_input):
+    try:
+        value = float(user_input)
+        if value < 0:
+            raise ValueError("Delay must be a positive number.")
+        return value
+    except ValueError as e:
+        print(f'Invalid input: {e}')
+        sys.exit(1)
 
 if __name__ == '__main__':
-    handler = NetworkHandler()
-    url = 'https://api.example.com/data'
-    try:
-        data = handler.fetch_data(url)
-        print('Data retrieved:', data)
-    except NetworkError as e:
-        print(e)
+    user_input = input("Enter delay in seconds: ")
+    validated_delay = validate_input(user_input)
+    auto_clicker = AutoClicker(validated_delay)
+    auto_clicker.start_clicking()
