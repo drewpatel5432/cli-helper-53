@@ -1,30 +1,32 @@
 import time
-import pyautogui
+import random
+
+def validate_input(user_input):
+    if not isinstance(user_input, dict):
+        raise ValueError('Input must be a dictionary')
+    if 'clicks' not in user_input or not isinstance(user_input['clicks'], int):
+        raise ValueError('Missing or invalid number of clicks')
+    if 'interval' not in user_input or not isinstance(user_input['interval'], (int, float)):
+        raise ValueError('Missing or invalid interval')
 
 class AutoClicker:
-    def __init__(self, interval=0.1):
+    def __init__(self, clicks, interval):
+        self.clicks = clicks
         self.interval = interval
-        self.running = False
 
-    def start_clicking(self):
-        self.running = True
-        print("AutoClicker started.")
-        while self.running:
-            pyautogui.click()
+    def start(self):
+        for _ in range(self.clicks):
+            self.perform_click()
             time.sleep(self.interval)
 
-    def stop_clicking(self):
-        self.running = False
-        print("AutoClicker stopped.")
-
-    def set_interval(self, interval):
-        if interval <= 0:
-            raise ValueError("Interval must be a positive number.")
-        self.interval = interval
+    def perform_click(self):
+        print('Click!')
 
 if __name__ == '__main__':
-    clicker = AutoClicker(0.1)
+    user_input = {'clicks': 5, 'interval': 1.0}
     try:
-        clicker.start_clicking()
-    except KeyboardInterrupt:
-        clicker.stop_clicking()
+        validate_input(user_input)
+        auto_clicker = AutoClicker(user_input['clicks'], user_input['interval'])
+        auto_clicker.start()
+    except ValueError as e:
+        print(f'Input error: {e}')
