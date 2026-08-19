@@ -1,34 +1,25 @@
 import time
-import threading
+import random
+from validators import validate_input
 
 class AutoClicker:
-    def __init__(self, interval=1.0):
-        self.interval = interval
-        self._running = threading.Event()
-        self._click_thread = None
+    def __init__(self, click_interval, total_clicks):
+        self.click_interval = click_interval
+        self.total_clicks = total_clicks
 
-    def start(self):
-        if not self._running.is_set():
-            self._running.set()
-            self._click_thread = threading.Thread(target=self._click)
-            self._click_thread.start()
+    def start_clicking(self):
+        for i in range(self.total_clicks):
+            if validate_input(self.click_interval):
+                self.click()
+            else:
+                print('Invalid input. Skipping click.')
+            time.sleep(self.click_interval)
 
-    def stop(self):
-        self._running.clear()
-        if self._click_thread:
-            self._click_thread.join()
-            self._click_thread = None
-
-    def _click(self):
-        while self._running.is_set():
-            self.perform_click()
-            time.sleep(self.interval)
-
-    def perform_click(self):
-        print("Click!")  # Simulating a click action
+    def click(self):
+        print('Click!')  # Simulate a click
 
 if __name__ == '__main__':
-    clicker = AutoClicker(interval=0.5)
-    clicker.start()
-    time.sleep(5)  # Run for 5 seconds
-    clicker.stop()
+    click_interval = random.uniform(0.1, 2.0)  # Random click interval example
+    total_clicks = 5  # Fixed number of clicks
+    auto_clicker = AutoClicker(click_interval, total_clicks)
+    auto_clicker.start_clicking()
