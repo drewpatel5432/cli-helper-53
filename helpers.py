@@ -1,23 +1,25 @@
 import time
-import requests
+from typing import Callable, Any
 
-class NetworkError(Exception):
-    pass
+def validate_input(user_input: str, valid_options: list) -> bool:
+    return user_input in valid_options
 
-def retry_request(url, retries=5, backoff=2):
-    for attempt in range(retries):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an error for bad responses
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            if attempt == retries - 1:
-                raise NetworkError(f'Failed to retrieve {url} after {retries} attempts') from e
-            time.sleep(backoff ** attempt)  # Exponential backoff
+
+def autoclicker_loop(click_function: Callable[[Any], None], options: list):
+    while True:
+        user_input = input('Enter command (start/stop): ').strip().lower()
+        if not validate_input(user_input, options):
+            print('Invalid command! Please use one of the following:', options)
+            continue
+        if user_input == 'start':
+            print('Autoclicker started!')
+            while True:
+                click_function()
+                time.sleep(1)  # Simulate click interval
+        elif user_input == 'stop':
+            print('Autoclicker stopped!')
+            break
+
 
 if __name__ == '__main__':
-    try:
-        data = retry_request('https://api.example.com/data')
-        print(data)
-    except NetworkError as ne:
-        print(ne)
+    autoclicker_loop(lambda: print('Clicked!'), ['start', 'stop'])
