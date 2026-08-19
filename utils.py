@@ -1,38 +1,31 @@
-import os
-import json
+import time
+import pyautogui
 
-class FileReadError(Exception):
-    pass
+def click_mouse(x, y, button='left', clicks=1, interval=0):
+    pyautogui.click(x=x, y=y, button=button, clicks=clicks, interval=interval)
 
-class FileWriteError(Exception):
-    pass
+def double_click(x, y, interval=0):
+    click_mouse(x, y, clicks=2, interval=interval)
 
-def read_json_file(filepath):
-    if not os.path.exists(filepath):
-        raise FileReadError(f"File not found: {filepath}")
-    try:
-        with open(filepath, 'r') as file:
-            data = json.load(file)
-        return data
-    except json.JSONDecodeError as e:
-        raise FileReadError(f"Error decoding JSON from {filepath}: {e}")
-    except Exception as e:
-        raise FileReadError(f"Unexpected error reading {filepath}: {e}")
+def hold_mouse(x, y, duration):
+    pyautogui.moveTo(x, y)
+    pyautogui.mouseDown()
+    time.sleep(duration)
+    pyautogui.mouseUp()
 
+def move_mouse_smoothly(start_x, start_y, end_x, end_y, steps=10):
+    x_step = (end_x - start_x) / steps
+    y_step = (end_y - start_y) / steps
+    for i in range(steps):
+        pyautogui.moveTo(start_x + x_step * i, start_y + y_step * i)
+        time.sleep(0.01)
 
-def write_json_file(filepath, data):
-    try:
-        with open(filepath, 'w') as file:
-            json.dump(data, file, indent=4)
-    except IOError as e:
-        raise FileWriteError(f"Error writing to file {filepath}: {e}")
-    except Exception as e:
-        raise FileWriteError(f"Unexpected error writing to {filepath}: {e}")
+def wait_for_image(image_path, timeout=30):
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        location = pyautogui.locateOnScreen(image_path)
+        if location:
+            return location
+        time.sleep(0.5)
+    return None
 
-
-def safe_execute(func, *args, **kwargs):
-    try:
-        return func(*args, **kwargs)
-    except Exception as e:
-        print(f"Error executing function {func.__name__}: {e}")
-        return None
